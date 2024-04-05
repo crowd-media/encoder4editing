@@ -32,6 +32,9 @@ def main(args):
     else:
         latent_codes = get_all_latents(net, data_loader, args.n_sample, is_cars=is_cars)
         torch.save(latent_codes, latents_file_path)
+    #Uncomment the following lines to play with random latent codes
+    '''tensor = torch.rand(6,18,512).to(device)
+    latent_codes = tensor * (latent_codes.max()-latent_codes.min())+latent_codes.min()'''
 
     if not args.latents_only:
         generate_inversions(args, generator, latent_codes, is_cars=is_cars)
