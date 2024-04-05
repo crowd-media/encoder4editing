@@ -11,3 +11,12 @@ Install the requirements.txt
 ``` 
 pip install -r requirements.txt
 ```
+
+### Inference example
+
+```
+ python scripts/inference.py \
+ --images_dir=/home/ubuntu/efs/data/datasets/ffhq/test \
+ --save_dir=/home/ubuntu/efs/data/users/monica/e4e_result \
+ /home/ubuntu/efs/data/models/e4e/e4e_ffhq_encode.pt
+```
