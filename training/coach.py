@@ -219,12 +219,14 @@ class Coach:
                                       target_root=dataset_args['train_target_root'],
                                       source_transform=transforms_dict['transform_source'],
                                       target_transform=transforms_dict['transform_gt_train'],
-                                      opts=self.opts)
+                                      opts=self.opts,
+                                      set="train")
         test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
                                      target_root=dataset_args['test_target_root'],
                                      source_transform=transforms_dict['transform_source'],
                                      target_transform=transforms_dict['transform_test'],
-                                     opts=self.opts)
+                                     opts=self.opts,
+                                     set="val")
         print("Number of training samples: {}".format(len(train_dataset)))
         print("Number of test samples: {}".format(len(test_dataset)))
         return train_dataset, test_dataset
