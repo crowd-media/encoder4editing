@@ -1,6 +1,6 @@
 dataset_paths = {
 	#  Face Datasets (In the paper: FFHQ - train, CelebAHQ - test)
-	'ffhq': '',
+	'ffhq': '/home/ubuntu/efs/data/datasets/ffhq/complete',
 	'celeba_test': '',
 
 	#  Cars Dataset (In the paper: Stanford cars)
