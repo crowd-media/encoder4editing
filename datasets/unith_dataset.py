@@ -6,8 +6,8 @@ from utils import data_utils
 class UnithImagesDataset(Dataset):
 
 	def __init__(self, source_json_path, target_json_path, opts, target_transform=None, source_transform=None):
-		self.source_paths = sorted(data_utils.make_dataset(source_json_path))
-		self.target_paths = sorted(data_utils.make_dataset(target_json_path))
+		self.source_paths = sorted(data_utils.make_dataset_from_json(source_json_path))
+		self.target_paths = sorted(data_utils.make_dataset_from_json(target_json_path))
 		self.source_transform = source_transform
 		self.target_transform = target_transform
 		self.opts = opts
