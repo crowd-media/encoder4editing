@@ -95,14 +95,14 @@ class EqualConv2d(nn.Module):
 
         self.weight = nn.Parameter(
             torch.randn(out_channel, in_channel, kernel_size, kernel_size)
-        )
+        ).to('cuda')
         self.scale = 1 / math.sqrt(in_channel * kernel_size ** 2)
 
         self.stride = stride
         self.padding = padding
 
         if bias:
-            self.bias = nn.Parameter(torch.zeros(out_channel))
+            self.bias = nn.Parameter(torch.zeros(out_channel)).to('cuda')
 
         else:
             self.bias = None
@@ -131,10 +131,10 @@ class EqualLinear(nn.Module):
     ):
         super().__init__()
 
-        self.weight = nn.Parameter(torch.randn(out_dim, in_dim).div_(lr_mul))
+        self.weight = nn.Parameter(torch.randn(out_dim, in_dim).div_(lr_mul)).to('cuda')
 
         if bias:
-            self.bias = nn.Parameter(torch.zeros(out_dim).fill_(bias_init))
+            self.bias = nn.Parameter(torch.zeros(out_dim).fill_(bias_init)).to('cuda')
 
         else:
             self.bias = None
@@ -217,7 +217,7 @@ class ModulatedConv2d(nn.Module):
 
         self.weight = nn.Parameter(
             torch.randn(1, out_channel, in_channel, kernel_size, kernel_size)
-        )
+        ).to('cuda')
 
         self.modulation = EqualLinear(style_dim, in_channel, bias_init=1)
 
@@ -277,7 +277,7 @@ class NoiseInjection(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.weight = nn.Parameter(torch.zeros(1))
+        self.weight = nn.Parameter(torch.zeros(1)).to('cuda')
 
     def forward(self, image, noise=None):
         if noise is None:
@@ -291,7 +291,7 @@ class ConstantInput(nn.Module):
     def __init__(self, channel, size=4):
         super().__init__()
 
-        self.input = nn.Parameter(torch.randn(1, channel, size, size))
+        self.input = nn.Parameter(torch.randn(1, channel, size, size)).to('cuda')
 
     def forward(self, input):
         batch = input.shape[0]
@@ -345,7 +345,7 @@ class ToRGB(nn.Module):
             self.upsample = Upsample(blur_kernel)
 
         self.conv = ModulatedConv2d(in_channel, 3, 1, style_dim, demodulate=False)
-        self.bias = nn.Parameter(torch.zeros(1, 3, 1, 1))
+        self.bias = nn.Parameter(torch.zeros(1, 3, 1, 1)).to('cuda')
 
     def forward(self, input, style, skip=None):
         out = self.conv(input, style)
@@ -460,6 +460,7 @@ class Generator(nn.Module):
         latent_in = torch.randn(
             n_latent, self.style_dim, device=self.input.input.device
         )
+      
         latent = self.style(latent_in).mean(0, keepdim=True)
 
         return latent

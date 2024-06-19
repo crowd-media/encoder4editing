@@ -33,3 +33,23 @@ def make_dataset(dir, set="train"):
                 path = os.path.join(root, fname)
                 images.append(path)
     return images
+
+def make_dataset_from_json(json_path, set="train"):
+    images = []
+    assert os.path.exists(json_path), '%s is not a valid json path' % json_path
+    if set == "train":
+        partition_start = 0.2
+        partition_end = 1.0
+    elif set == "val":
+        partition_start = 0.0
+        partition_end = 0.2
+        
+    for root, _, fnames in sorted(os.walk(dir)):
+        fnames = sorted(fnames)
+        num_files = len(fnames)
+        
+        for fname in fnames[int(partition_start*num_files):int(partition_end*num_files)]:
+            if is_image_file(fname):
+                path = os.path.join(root, fname)
+                images.append(path)
+    return images
