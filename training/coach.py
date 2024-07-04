@@ -32,7 +32,7 @@ class Coach:
 
         self.global_step = 0
 
-        self.device = 'cuda:0'
+        self.device = 'cuda'
         self.opts.device = self.device
         # Initialize network
         self.net = pSp(self.opts).to(self.device)
@@ -103,14 +103,25 @@ class Coach:
         print(f'Resuming training from step {self.global_step}')
 
     def train(self):
+        epoch = 0
+
         self.net.train()
         if self.opts.progressive_steps:
             self.check_for_progressive_training_update()
         while self.global_step < self.opts.max_steps:
             for batch_idx, batch in enumerate(self.train_dataloader):
+                torch.cuda.reset_peak_memory_stats(self.device)
+
                 loss_dict = {}
+                memory_usage_before = torch.cuda.memory_allocated("cuda") / (1024 ** 3)
                 if self.is_training_discriminator():
                     loss_dict = self.train_discriminator(batch)
+                    peak_memory_usage = torch.cuda.max_memory_allocated("cuda") / (1024 ** 3)
+                    print(f"TRAIN DISCRIMINATOR: Peak memory usage: {peak_memory_usage:.2f} GB")
+                    print(f"TRAIN DISCRIMINATOR: Memory usage: {peak_memory_usage-memory_usage_before:.2f} GB")
+
+                torch.cuda.reset_peak_memory_stats(self.device)
+                memory_usage_before = torch.cuda.memory_allocated("cuda") / (1024 ** 3)
                 x, y, y_hat, latent = self.forward(batch)
                 loss, encoder_loss_dict, id_logs = self.calc_loss(x, y, y_hat, latent)
                 loss_dict = {**loss_dict, **encoder_loss_dict}
@@ -126,10 +137,20 @@ class Coach:
                     self.print_metrics(loss_dict, prefix='train')
                     self.log_metrics(loss_dict, prefix='train')
 
+                peak_memory_usage = torch.cuda.max_memory_allocated(self.device) / (1024 ** 3)
+                print(f"TRAIN: Epoch [{epoch}], Step {self.global_step}, Batch ID {batch_idx}, Peak memory usage: {peak_memory_usage:.2f} GB")
+                print(f"TRAIN: Memory usage: {peak_memory_usage-memory_usage_before:.2f} GB")
+
                 # Validation related
                 val_loss_dict = None
                 if self.global_step % self.opts.val_interval == 0 or self.global_step == self.opts.max_steps:
+                    torch.cuda.reset_peak_memory_stats("cuda")
+                    memory_usage_before = torch.cuda.memory_allocated("cuda") / (1024 ** 3)
                     val_loss_dict = self.validate()
+                    peak_memory_usage = torch.cuda.max_memory_allocated("cuda") / (1024 ** 3)
+                    print(f"VAL: Peak memory usage: {peak_memory_usage:.2f} GB")
+                    print(f"VAL: Memory usage: {peak_memory_usage-memory_usage_before:.2f} GB")
+
                     if val_loss_dict and (self.best_val_loss is None or val_loss_dict['loss'] < self.best_val_loss):
                         self.best_val_loss = val_loss_dict['loss']
                         self.checkpoint_me(val_loss_dict, is_best=True)
@@ -143,10 +164,11 @@ class Coach:
                 if self.global_step == self.opts.max_steps:
                     print('OMG, finished training!')
                     break
-
+                
                 self.global_step += 1
                 if self.opts.progressive_steps:
                     self.check_for_progressive_training_update()
+            epoch += 1
 
     def check_for_progressive_training_update(self, is_resume_from_ckpt=False):
         for i in range(len(self.opts.progressive_steps)):

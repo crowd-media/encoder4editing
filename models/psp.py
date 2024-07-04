@@ -59,15 +59,28 @@ class pSp(nn.Module):
         if input_code:
             codes = x
         else:
+            torch.cuda.reset_peak_memory_stats("cuda")
+            memory_usage_before = torch.cuda.memory_allocated("cuda") / (1024 ** 3)
             codes = self.encoder(x)
+            peak_memory_usage = torch.cuda.max_memory_allocated("cuda") / (1024 ** 3)
+            print(f"ENCODER: Peak memory usage: {peak_memory_usage:.2f} GB")
+            print(f"ENCODER: Memory usage: {peak_memory_usage-memory_usage_before:.2f} GB")
+
             # normalize with respect to the center of an average face
             if self.opts.start_from_latent_avg:
+                torch.cuda.reset_peak_memory_stats("cuda")
+                memory_usage_before = torch.cuda.memory_allocated("cuda") / (1024 ** 3)
                 if codes.ndim == 2:
                     codes = codes + self.latent_avg.repeat(codes.shape[0], 1, 1)[:, 0, :]
                 else:
                     codes = codes + self.latent_avg.repeat(codes.shape[0], 1, 1)
+                peak_memory_usage = torch.cuda.max_memory_allocated("cuda") / (1024 ** 3)
+                print(f"NORMALIZE: Peak memory usage: {peak_memory_usage:.2f} GB")
+                print(f"NORMALIZE: Memory usage: {peak_memory_usage-memory_usage_before:.2f} GB")
 
         if latent_mask is not None:
+            torch.cuda.reset_peak_memory_stats("cuda")
+            memory_usage_before = torch.cuda.memory_allocated("cuda") / (1024 ** 3)
             for i in latent_mask:
                 if inject_latent is not None:
                     if alpha is not None:
@@ -76,15 +89,31 @@ class pSp(nn.Module):
                         codes[:, i] = inject_latent[:, i]
                 else:
                     codes[:, i] = 0
+            peak_memory_usage = torch.cuda.max_memory_allocated("cuda") / (1024 ** 3)
+            print(f"LATENT MASK: Peak memory usage: {peak_memory_usage:.2f} GB")
+            print(f"LATENT MASK: Memory usage: {peak_memory_usage-memory_usage_before:.2f} GB")
+
 
         input_is_latent = not input_code
+        torch.cuda.reset_peak_memory_stats("cuda")
+        memory_usage_before = torch.cuda.memory_allocated("cuda") / (1024 ** 3)
         images, result_latent = self.decoder([codes],
                                              input_is_latent=input_is_latent,
                                              randomize_noise=randomize_noise,
                                              return_latents=return_latents)
+        peak_memory_usage = torch.cuda.max_memory_allocated("cuda") / (1024 ** 3)
+        print(f"DECODER: Peak memory usage: {peak_memory_usage:.2f} GB")
+        print(f"DECODER: Memory usage: {peak_memory_usage-memory_usage_before:.2f} GB")
+
+
 
         if resize:
+            torch.cuda.reset_peak_memory_stats("cuda")
+            memory_usage_before = torch.cuda.memory_allocated("cuda") / (1024 ** 3)
             images = self.face_pool(images)
+            peak_memory_usage = torch.cuda.max_memory_allocated("cuda") / (1024 ** 3)
+            print(f"RESIZE: Peak memory usage: {peak_memory_usage:.2f} GB")
+            print(f"RESIZE: Memory usage: {peak_memory_usage-memory_usage_before:.2f} GB")
 
         if return_latents:
             return images, result_latent

@@ -19,13 +19,19 @@ from training.coach import Coach
 def main():
 	opts = TrainOptions().parse()
 	previous_train_ckpt = None
+
 	if opts.resume_training_from_ckpt:
 		opts, previous_train_ckpt = load_train_checkpoint(opts)
 	else:
 		setup_progressive_steps(opts)
 		create_initial_experiment_dir(opts)
 
+	memory_usage_before = torch.cuda.memory_allocated("cuda") / (1024 ** 3)
 	coach = Coach(opts, previous_train_ckpt)
+	peak_memory_usage = torch.cuda.max_memory_allocated("cuda") / (1024 ** 3)
+	print(f"INIT: Peak memory usage: {peak_memory_usage:.2f} GB")
+	print(f"INIT: Memory usage: {peak_memory_usage-memory_usage_before:.2f} GB")
+
 	coach.train()
 
 
