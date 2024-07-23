@@ -24,7 +24,7 @@ def main():
 	else:
 		setup_progressive_steps(opts)
 		create_initial_experiment_dir(opts)
-
+	pprint.pprint(opts)
 	coach = Coach(opts, previous_train_ckpt)
 	coach.train()
 
@@ -79,6 +79,8 @@ def update_new_configs(ckpt_opts, new_opts):
 	for k, v in new_opts.items():
 		if k not in ckpt_opts:
 			ckpt_opts[k] = v
+	print('new_opts *****************************')
+	print(new_opts)
 	if new_opts['update_param_list']:
 		for param in new_opts['update_param_list']:
 			ckpt_opts[param] = new_opts[param]

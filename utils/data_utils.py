@@ -19,11 +19,11 @@ def make_dataset(dir, set="train"):
     images = []
     assert os.path.isdir(dir), '%s is not a valid directory' % dir
     if set == "train":
-        partition_start = 0.2
+        partition_start = 0.9995
         partition_end = 1.0
     elif set == "val":
         partition_start = 0.0
-        partition_end = 0.2
+        partition_end = 0.0005
         
     for root, _, fnames in sorted(os.walk(dir)):
         fnames = sorted(fnames)
@@ -45,11 +45,13 @@ def make_dataset_from_json(json_path):
 
     for video_data in dataset["inputs"]:
         seq_id = video_data["sequence_id"]
-        fnames = sorted(fnames["frame_paths"])
+        fnames = sorted(video_data["frame_paths"])
         
         for fname in fnames:
             if is_image_file(fname):
-                path = os.path.join(root, seq_id, fname)
+                path = os.path.join(root,"reference", seq_id, fname)
                 images.append(path)
+                break
+
 
     return images

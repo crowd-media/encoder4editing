@@ -42,7 +42,21 @@ class pSp(nn.Module):
         if self.opts.checkpoint_path is not None:
             print('Loading e4e over the pSp framework from checkpoint: {}'.format(self.opts.checkpoint_path))
             ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
+            c_dict= get_keys(ckpt, 'encoder')
+            for k in list(c_dict.keys()):
+                print('name:', k)
+            print('encoder')
+            # print(self.encoder)
+            ## print layer names
+            for name, param in self.encoder.named_parameters():
+                print(name)
             self.encoder.load_state_dict(get_keys(ckpt, 'encoder'), strict=True)
+
+            c_dict= get_keys(ckpt, 'decoder')
+            for k in list(c_dict.keys()):
+                print('ckpoint name:', k)
+            for name, param in self.decoder.named_parameters():
+                print(name)
             self.decoder.load_state_dict(get_keys(ckpt, 'decoder'), strict=True)
             self.__load_latent_avg(ckpt)
         else:
@@ -51,7 +65,7 @@ class pSp(nn.Module):
             self.encoder.load_state_dict(encoder_ckpt, strict=False)
             print('Loading decoder weights from pretrained!')
             ckpt = torch.load(self.opts.stylegan_weights)
-            self.decoder.load_state_dict(ckpt['g_ema'], strict=False)
+            self.decoder.load_state_dict(ckpt['g_ema'], strict=True)
             self.__load_latent_avg(ckpt, repeat=self.encoder.style_count)
 
     def forward(self, x, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
@@ -93,8 +107,10 @@ class pSp(nn.Module):
 
     def __load_latent_avg(self, ckpt, repeat=None):
         if 'latent_avg' in ckpt:
+            print('loading latent average!')
             self.latent_avg = ckpt['latent_avg'].to(self.opts.device)
         elif self.opts.start_from_latent_avg:
+            print('latent avg not available, computing')
             # Compute mean code based on a large number of latents (10,000 here)
             with torch.no_grad():
                 self.latent_avg = self.decoder.mean_latent(10000).to(self.opts.device)

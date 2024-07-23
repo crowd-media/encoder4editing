@@ -15,6 +15,7 @@ from utils import common, train_utils
 from criteria import id_loss, moco_loss
 from configs import data_configs
 from datasets.images_dataset import ImagesDataset
+from datasets.unith_dataset import UnithImagesDataset
 from criteria.lpips.lpips import LPIPS
 from models.psp import pSp
 from models.latent_codes_pool import LatentCodesPool
@@ -42,6 +43,7 @@ class Coach:
             self.lpips_loss = LPIPS(net_type=self.opts.lpips_type).to(self.device).eval()
         if self.opts.id_lambda > 0:
             if 'ffhq' in self.opts.dataset_type or 'celeb' in self.opts.dataset_type:
+                print(f"********** self.opts.dataset_type {self.opts.dataset_type}  load IDLoss model ************************************")
                 self.id_loss = id_loss.IDLoss().to(self.device).eval()
             else:
                 self.id_loss = moco_loss.MocoLoss(opts).to(self.device).eval()
@@ -108,6 +110,7 @@ class Coach:
             self.check_for_progressive_training_update()
         while self.global_step < self.opts.max_steps:
             for batch_idx, batch in enumerate(self.train_dataloader):
+                # print(f"batch shape {batch[0].shape}")
                 loss_dict = {}
                 if self.is_training_discriminator():
                     loss_dict = self.train_discriminator(batch)
@@ -215,18 +218,32 @@ class Coach:
         print('Loading dataset for {}'.format(self.opts.dataset_type))
         dataset_args = data_configs.DATASETS[self.opts.dataset_type]
         transforms_dict = dataset_args['transforms'](self.opts).get_transforms()
-        train_dataset = ImagesDataset(source_root=dataset_args['train_source_root'],
-                                      target_root=dataset_args['train_target_root'],
+        # train_dataset = ImagesDataset(source_root=dataset_args['train_source_root'],
+        #                               target_root=dataset_args['train_target_root'],
+        #                               source_transform=transforms_dict['transform_source'],
+        #                               target_transform=transforms_dict['transform_gt_train'],
+        #                               opts=self.opts,
+        #                               set="train")
+        # test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
+        #                              target_root=dataset_args['test_target_root'],
+        #                              source_transform=transforms_dict['transform_source'],
+        #                              target_transform=transforms_dict['transform_test'],
+        #                              opts=self.opts,
+        #                              set="val")
+
+        train_dataset = UnithImagesDataset(source_json_path="/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/train_16.json",
+                                      target_json_path="/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/train_16.json",
                                       source_transform=transforms_dict['transform_source'],
                                       target_transform=transforms_dict['transform_gt_train'],
-                                      opts=self.opts,
-                                      set="train")
-        test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
-                                     target_root=dataset_args['test_target_root'],
+                                      opts=self.opts)
+        test_dataset = UnithImagesDataset(source_json_path="/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/val_16.json",
+                                     target_json_path="/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/val_16.json",
                                      source_transform=transforms_dict['transform_source'],
                                      target_transform=transforms_dict['transform_test'],
-                                     opts=self.opts,
-                                     set="val")
+                                     opts=self.opts)
+
+
+
         print("Number of training samples: {}".format(len(train_dataset)))
         print("Number of test samples: {}".format(len(test_dataset)))
         return train_dataset, test_dataset
@@ -263,6 +280,9 @@ class Coach:
             loss += self.opts.delta_norm_lambda * total_delta_loss
 
         if self.opts.id_lambda > 0:  # Similarity loss
+            # print(f"y_hat shape {y_hat.shape}")
+            # print(f"y shape {y.shape}")
+            # print(f"x shape {x.shape}")
             loss_id, sim_improvement, id_logs = self.id_loss(y_hat, y, x)
             loss_dict['loss_id'] = float(loss_id)
             loss_dict['id_improve'] = float(sim_improvement)
