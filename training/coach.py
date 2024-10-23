@@ -231,17 +231,18 @@ class Coach:
         #                              opts=self.opts,
         #                              set="val")
 
-        train_dataset = UnithImagesDataset(source_json_path="/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/train_16.json",
-                                      target_json_path="/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/train_16.json",
+        train_dataset = UnithImagesDataset(source_json_paths=["/home/ubuntu/efs/data/users/carla/datasets/unithTalking/processed/train.json", "/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/train_350.json"],
+                                      target_json_paths=["/home/ubuntu/efs/data/users/carla/datasets/unithTalking/processed/train.json", "/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/train_350.json"],
                                       source_transform=transforms_dict['transform_source'],
                                       target_transform=transforms_dict['transform_gt_train'],
-                                      opts=self.opts)
-        test_dataset = UnithImagesDataset(source_json_path="/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/val_16.json",
-                                     target_json_path="/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/val_16.json",
+                                      opts=self.opts,
+                                      set = "train")
+        test_dataset = UnithImagesDataset(source_json_paths=["/home/ubuntu/efs/data/users/carla/datasets/unithTalking/processed/val.json", "/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/val_50_1.json"],
+                                     target_json_paths=["/home/ubuntu/efs/data/users/carla/datasets/unithTalking/processed/val.json", "/home/ubuntu/efs/data/users/itziar/datasets/Casual_Conversation_V2_total/processed/val_50_1.json"],
                                      source_transform=transforms_dict['transform_source'],
                                      target_transform=transforms_dict['transform_test'],
-                                     opts=self.opts)
-
+                                     opts=self.opts,
+                                     set = "val")
 
 
         print("Number of training samples: {}".format(len(train_dataset)))

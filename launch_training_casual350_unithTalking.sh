@@ -3,10 +3,9 @@
 
 python scripts/train.py \
 --dataset_type ffhq_encode \
---exp_dir /home/ubuntu/efs/data/users/marcel/e4e_trainings/expUnith130 \
+--exp_dir /home/ubuntu/efs/data/users/carla/trainings/e4e_trainings/casual350_unithTalking \
 --stylegan_size 1024 \
 --stylegan_weights /home/ubuntu/efs/data/models/stylegan/stylegan2-ffhq-config-f.pt \
---resume_training_from_ckpt /home/ubuntu/efs/data/users/marcel/e4e_trainings/expUnith130/checkpoints/best_model.pt \
 --start_from_latent_avg \
 --use_w_pool \
 --w_discriminator_lambda 0.1 \

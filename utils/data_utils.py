@@ -4,6 +4,7 @@ https://github.com/NVIDIA/pix2pixHD/blob/master/data/image_folder.py
 """
 import os
 import json
+from random import shuffle
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -35,7 +36,7 @@ def make_dataset(dir, set="train"):
                 images.append(path)
     return images
 
-def make_dataset_from_json(json_path):
+def make_dataset_from_json(json_path, set="train"):
     images = []
     assert os.path.exists(json_path), '%s is not a valid json path' % json_path
     
@@ -45,13 +46,19 @@ def make_dataset_from_json(json_path):
 
     for video_data in dataset["inputs"]:
         seq_id = video_data["sequence_id"]
-        fnames = sorted(video_data["frame_paths"])
+        fnames = video_data["frame_paths"]
+        # if set == "train":
+        #     list_frames = video_data["frame_paths"]
+        #     shuffle(list_frames)
+        #     fnames = list_frames[:3] 
+        # else:
+        #     list_frames = sorted(video_data["frame_paths"])
+        #     len_dataset = len(list_frames)
+        #     fnames = [list_frames[0], list_frames[-1], list_frames[len_dataset//2]]
         
         for fname in fnames:
             if is_image_file(fname):
                 path = os.path.join(root,"reference", seq_id, fname)
                 images.append(path)
-                break
-
 
     return images
